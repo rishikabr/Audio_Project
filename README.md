@@ -32,7 +32,7 @@ This is a full-stack web application built with Django and vanilla JavaScript th
 2.  **Install Dependencies:**
     Install the required packages:
     ```bash
-    pip install -r backend/requirements.txt
+    pip install -r backend\requirements.txt
     ```
 
 3.  **Run Database Migrations:**
