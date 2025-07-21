@@ -25,14 +25,14 @@ This is a full-stack web application built with Django and vanilla JavaScript th
 
 1.  **Navigate to the Project Directory:**
     All commands should be run from the `audio_project` subdirectory.
-    ```bash
+    ```
     cd audio_project
     ```
 
 2.  **Install Dependencies:**
     Install the required packages:
     ```bash
-    pip install -r backend/requirements.txt
+    pip install -r backend\requirements.txt
     ```
 
 3.  **Run Database Migrations:**
