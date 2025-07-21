@@ -6,7 +6,7 @@ from .models import Profile, AudioFile
 class AudioFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AudioFile
-        fields = ('file', 'uploaded_at')
+        fields = ('id', 'file', 'uploaded_at')
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
