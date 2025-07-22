@@ -26,8 +26,10 @@ This is a full-stack web application built with Django and vanilla JavaScript th
 1.  **Navigate to the Project Directory:**
     All commands should be run from the `audio_project` subdirectory.
     ```bash
+    git clone https://github.com/rishikabr/Audio_Project.git
     cd audio_project
     ```
+    If not already present in the directory
 
 2.  **Install Dependencies:**
     Install the required packages:
