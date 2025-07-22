@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const showRegisterLink = document.getElementById('show-register');
     const showLoginLink = document.getElementById('show-login');
 
+    // --- All Event Listeners ---
+
     showRegisterLink.addEventListener('click', (e) => {
         e.preventDefault();
         loginView.style.display = 'none';
@@ -39,8 +41,28 @@ document.addEventListener('DOMContentLoaded', () => {
         loginView.style.display = 'block';
     });
 
-    // Auth logic
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', handleLogin);
+    registerForm.addEventListener('submit', handleRegistration);
+    logoutBtn.addEventListener('click', handleLogout);
+    uploadBtn.addEventListener('click', handleUpload);
+    rewindBtn.addEventListener('click', () => audioPlayer.currentTime -= 5);
+    forwardBtn.addEventListener('click', () => audioPlayer.currentTime += 5);
+
+    audioUploadInput.addEventListener('change', () => {
+        const fileName = audioUploadInput.files[0]?.name || 'Drag & drop a file or click to select';
+        const fileMsg = document.querySelector('.file-msg');
+        fileMsg.textContent = fileName;
+
+        const dropArea = document.querySelector('.file-drop-area');
+        if (audioUploadInput.files.length > 0) {
+            dropArea.classList.add('is-active');
+        } else {
+            dropArea.classList.remove('is-active');
+        }
+    });
+
+
+    function handleLogin(e) {
         e.preventDefault();
         const username = document.getElementById('login-username').value;
         const password = document.getElementById('login-password').value;
@@ -59,9 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(data.error || 'Login failed');
             }
         });
-    });
+    }
 
-    registerForm.addEventListener('submit', (e) => {
+    function handleRegistration(e) {
         e.preventDefault();
         if (!validateRegistrationForm()) {
             return;
@@ -87,25 +109,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(errorMsg);
             }
         });
-    });
+    }
 
-    logoutBtn.addEventListener('click', () => {
+    function handleLogout() {
         localStorage.removeItem('token');
         showAuth();
-    });
+    }
 
-    audioUploadInput.addEventListener('change', () => {
-        const fileName = audioUploadInput.files[0]?.name || 'Drag & drop a file or click to select';
-        const fileMsg = document.querySelector('.file-msg');
-        fileMsg.textContent = fileName;
-
-        const dropArea = document.querySelector('.file-drop-area');
-        if (audioUploadInput.files.length > 0) {
-            dropArea.classList.add('is-active');
-        } else {
-            dropArea.classList.remove('is-active');
+    function handleUpload() {
+        const token = localStorage.getItem('token');
+        const file = audioUploadInput.files[0];
+        if (!file) {
+            showToast('Please select a file to upload.', 'error');
+            return;
         }
-    });
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Disable button and show status
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Uploading...';
+
+        fetch(`${apiBaseUrl}/upload/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Token ${token}` },
+            body: formData,
+        })
+        .then(response => {
+            if (response.ok) {
+                fetchUserDetails();
+                showToast('Upload successful!');
+            } else {
+                showToast('Upload failed.', 'error');
+            }
+        })
+        .finally(() => {
+            // Re-enable button and restore text
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload';
+            // Clear the file input
+            audioUploadInput.value = '';
+            document.querySelector('.file-msg').textContent = 'Drag & drop a file or click to select';
+            document.querySelector('.file-drop-area').classList.remove('is-active');
+        });
+    }
 
     function validateRegistrationForm() {
         let isValid = true;
@@ -160,8 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`${apiBaseUrl}/user/`, {
             headers: { 'Authorization': `Token ${token}` }
         })
-        .then(response => response.json())
-        .then(data => {
+            .then(response => response.json())
+            .then(data => {
             if (data.detail) { // Handle invalid token
                 showAuth();
                 return;
@@ -170,23 +218,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.profile && data.profile.profile_picture) {
                 profilePic = `<img src="${data.profile.profile_picture}" alt="Profile Picture" class="profile-pic">`;
             }
-            userInfoDiv.innerHTML = `
+                userInfoDiv.innerHTML = `
                 ${profilePic}
                 <div class="user-details">
                     <h2>${data.username}</h2>
                     <p>${data.email}</p>
                     <p>${data.profile?.phone_number || ''}</p>
                 </div>
-            `;
+                `;
             renderAudioList(data.audio_files);
-            if (data.audio_files.length > 0) {
-                const latestAudio = data.audio_files[data.audio_files.length - 1];
+                if (data.audio_files.length > 0) {
+                    const latestAudio = data.audio_files[data.audio_files.length - 1];
                 audioPlayer.src = latestAudio.file;
                 currentAudioName.textContent = latestAudio.file.split('/').pop();
-                audioPlayer.load();
+                    audioPlayer.load();
             } else {
                 currentAudioName.textContent = 'None';
-            }
+                }
         });
     }
 
@@ -265,53 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    uploadBtn.addEventListener('click', () => {
-        const token = localStorage.getItem('token');
-        const file = audioUploadInput.files[0];
-        if (!file) {
-            showToast('Please select a file to upload.', 'error');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        // Disable button and show status
-        uploadBtn.disabled = true;
-        uploadBtn.textContent = 'Uploading...';
-
-        fetch(`${apiBaseUrl}/upload/`, {
-            method: 'POST',
-            headers: { 'Authorization': `Token ${token}` },
-            body: formData,
-        })
-        .then(response => {
-            if (response.ok) {
-                fetchUserDetails();
-                showToast('Upload successful!');
-            } else {
-                showToast('Upload failed.', 'error');
-            }
-        })
-        .finally(() => {
-            // Re-enable button and restore text
-            uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Upload';
-            // Clear the file input
-            audioUploadInput.value = '';
-            document.querySelector('.file-msg').textContent = 'Drag & drop a file or click to select';
-            document.querySelector('.file-drop-area').classList.remove('is-active');
-        });
-    });
-
-    rewindBtn.addEventListener('click', () => {
-        audioPlayer.currentTime -= 5;
-    });
-
-    forwardBtn.addEventListener('click', () => {
-        audioPlayer.currentTime += 5;
-    });
-    
     // Initial check
     if (localStorage.getItem('token')) {
         showApp();
